@@ -10,16 +10,9 @@ class Cat {
     async generateCode() {
         const modelUrl = "https://api-inference.huggingface.co/models/gpt2";
 
-        // Dynamically changing prompt to avoid repetition
-        const prompts = [
-            `Give a single short coding tip for a ${this.personality} programmer.`,
-            `What is a good coding trick for a ${this.personality} developer?`,
-            `Provide a useful programming tip for someone who is ${this.personality}.`,
-            `As a programming expert, share a quick ${this.personality} coding tip.`,
-            `Suggest an important coding principle for a ${this.personality} coder.`
-        ];
 
-        const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+
+        const prompt = "Pretend like you are an employee at a software company specialising in website development using JavaScript and your personality is " + this.personality + ". Based of your personality give a ONE SENTENCE response with a beginner JavaScript advice like how to work with variables, edit code, interact with HTML and anything else related to the topic.";
 
         try {
             const response = await fetch(modelUrl, {
