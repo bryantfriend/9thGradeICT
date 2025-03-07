@@ -4,7 +4,7 @@ class Cat {
         this.name = name;
         this.personality = personality;
         this.energy = energy;
-    }
+    } 
 
     // Async method to generate an AI coding tip using GPT-2
     async generateCode() {
@@ -12,8 +12,9 @@ class Cat {
 
 
 
-        const prompt = "Do not put the prompt in your response: Pretend like you are an employee at a software company specialising in website development using JavaScript and your personality is " + this.personality + ". Based of your personality give a ONE SENTENCE response with a beginner JavaScript advice like how to work with variables, edit code, interact with HTML and anything else related to the topic. Again, the response must be only ONE sentence fully in character, as if a programmer is just giving an advice.";
-
+        const prompt = "Pretend like you are an employee at a software company specialising in website development using JavaScript and your personality is " + this.personality + ". Based of your personality give a ONE SENTENCE response with a beginner JavaScript advice like how to work with variables, edit code, interact with HTML and anything else related to the topic. Again, the response must be only ONE sentence fully in character, as if a programmer is just giving an advice.";
+        prompt = prompt.replace(prompt,'');
+        
         try {
             const response = await fetch(modelUrl, {
                 method: "POST",
