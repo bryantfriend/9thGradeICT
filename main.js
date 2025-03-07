@@ -6,30 +6,34 @@ class Cat {
         this.energy = energy;
     }
 
-    // Method to generate a coding tip or task
-    generateCode() {
-        const tips = {
-            lazy: [
-                "Use a 'for' loop instead of writing the same code 10 times. Even I wouldn’t nap through that!",
-                "Let functions do the work—cats hate repetitive tasks.",
-                "Arrays are like Yarn balls—unravel them with .map()!"
-            ],
-            curious: [
-                "Try 'console.log()' to debug—like sniffing out a hidden treat!",
-                "Explore 'fetch()' to grab data from APIs. What’s out there?",
-                "Use 'if/else' to make decisions—curiosity demands options!"
-            ],
-            playful: [
-                "Add a 'setTimeout()' to make things pop up like a cat toy!",
-                "Create a game with 'addEventListener()'—click me, human!",
-                "Animate with CSS and JS—make it bounce like a pouncing cat!"
-            ]
-        };
-
-        // Pick a random tip based on personality
-        const tipList = tips[this.personality];
-        const randomTip = tipList[Math.floor(Math.random() * tipList.length)];
-        return `${this.name} (${this.personality}) says: "${randomTip}"`;
+    // Async method to generate an AI coding tip using the Hugging Face Inference API
+    async generateCode() {
+        const modelUrl = "https://api-inference.huggingface.co/models/gpt2"; // You can choose another model if desired
+        // Create a prompt tailored to the cat's personality
+        const prompt = `Generate a creative and fun coding tip for a ${this.personality} programmer.`;
+        
+        try {
+            const response = await fetch(modelUrl, {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer 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",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ inputs: prompt })
+            });
+            
+            const data = await response.json();
+            
+            // Check if we received a valid response with generated text
+            if (Array.isArray(data) && data[0]?.generated_text) {
+                return `${this.name} (${this.personality}) says: "${data[0].generated_text.trim()}"`;
+            } else {
+                return `${this.name} (${this.personality}) says: "Hmm, I couldn't think of a tip right now."`;
+            }
+        } catch (error) {
+            console.error("Error generating AI tip:", error);
+            return `${this.name} (${this.personality}) says: "Oops, something went wrong with the AI tip."`;
+        }
     }
 
     // Method to simulate the cat "working"
@@ -53,8 +57,8 @@ const hireBtn = document.getElementById("hireCatBtn");
 const catMessage = document.getElementById("catMessage");
 const catTask = document.getElementById("catTask");
 
-// Event listener for hiring a cat
-hireBtn.addEventListener("click", () => {
+// Event listener for hiring a cat (made async to await the AI tip)
+hireBtn.addEventListener("click", async () => {
     // Pick a random cat
     const randomCat = cats[Math.floor(Math.random() * cats.length)];
 
@@ -68,14 +72,20 @@ hireBtn.addEventListener("click", () => {
             i++;
         } else {
             clearInterval(typeEffect);
-            // Show the coding tip/task after "typing" is done
-            catTask.textContent = randomCat.energy > 0 ? randomCat.generateCode() : "Zzz...";
         }
     }, 50);
 
     // Disable button briefly to prevent spam
     hireBtn.disabled = true;
-    setTimeout(() => {
+    
+    // Wait until the typing animation finishes before fetching the tip (approximate timing)
+    setTimeout(async () => {
+        if (randomCat.energy > 0) {
+            // Generate AI tip and display it
+            catTask.textContent = await randomCat.generateCode();
+        } else {
+            catTask.textContent = "Zzz...";
+        }
         hireBtn.disabled = false;
-    }, 2000);
+    }, workText.length * 50 + 500);
 });
