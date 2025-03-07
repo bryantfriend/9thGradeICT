@@ -10,10 +10,7 @@ class Cat {
     async generateCode() {
         const modelUrl = "https://api-inference.huggingface.co/models/gpt2";
 
-
-
         const prompt = "Pretend like you are an employee at a software company specialising in website development using JavaScript and your personality is " + this.personality + ". Based of your personality give a ONE SENTENCE response with a beginner JavaScript advice like how to work with variables, edit code, interact with HTML and anything else related to the topic. Again, the response must be only ONE sentence fully in character, as if a programmer is just giving an advice.";
-        
         
         try {
             const response = await fetch(modelUrl, {
@@ -35,9 +32,14 @@ class Cat {
             const data = await response.json();
 
             if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
-                // Extract only the first complete sentence to avoid repetition & long responses
-                generated_text = generated_text.replace(prompt '');
-                let tip = data[0].generated_text.split(". ")[0] + ".";
+                let tip = data[0].generated_text;
+
+                // Remove the prompt from the response
+                tip = tip.replace(prompt, "").trim();
+
+                // Extract only the first complete sentence
+                tip = tip.split(". ")[0] + ".";
+
                 return `${this.name} (${this.personality}) says: "${tip}"`;
             } else {
                 return `${this.name} (${this.personality}) says: "Hmm, I couldn't think of a tip right now."`;
