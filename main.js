@@ -9,16 +9,17 @@ class Cat {
     // Async method to generate an AI coding tip using GPT-2
     async generateCode() {
         const modelUrl = "https://api-inference.huggingface.co/models/gpt2";
-        const prompt = `
-            You are a helpful and fun programming tutor. 
-            Provide a short, practical coding tip for a ${this.personality} programmer. 
-            The tip should be relevant, useful, and no longer than 20 words. 
-            Example tips:
-            - "Use 'console.log()' to debug."
-            - "Follow DRY (Don't Repeat Yourself) to write cleaner code."
-            - "Use meaningful variable names for readability."
-            Coding tip:
-        `;
+
+        // Dynamically changing prompt to avoid repetition
+        const prompts = [
+            `Give a single short coding tip for a ${this.personality} programmer.`,
+            `What is a good coding trick for a ${this.personality} developer?`,
+            `Provide a useful programming tip for someone who is ${this.personality}.`,
+            `As a programming expert, share a quick ${this.personality} coding tip.`,
+            `Suggest an important coding principle for a ${this.personality} coder.`
+        ];
+
+        const prompt = prompts[Math.floor(Math.random() * prompts.length)];
 
         try {
             const response = await fetch(modelUrl, {
@@ -29,7 +30,7 @@ class Cat {
                 },
                 body: JSON.stringify({
                     inputs: prompt,
-                    parameters: { max_length: 50, temperature: 0.7 }
+                    parameters: { max_length: 50, temperature: 1.0, top_p: 0.9 }
                 })
             });
 
@@ -40,7 +41,7 @@ class Cat {
             const data = await response.json();
 
             if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
-                // Extract only the first complete sentence to avoid rambling
+                // Extract only the first complete sentence to avoid repetition & long responses
                 let tip = data[0].generated_text.split(". ")[0] + ".";
                 return `${this.name} (${this.personality}) says: "${tip}"`;
             } else {
