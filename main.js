@@ -6,12 +6,18 @@ class Cat {
         this.energy = energy;
     }
 
-    // Async method to generate an AI coding tip using Hugging Face Inference API
+    // Async method to generate an AI coding tip using GPT-2
     async generateCode() {
-        const modelUrl = "https://api-inference.huggingface.co/models/google/flan-t5-large"; // ✅ Correct model
+        const modelUrl = "https://api-inference.huggingface.co/models/gpt2";
         const prompt = `
-            Give a single short and useful coding tip for a ${this.personality} programmer.
-            Keep it concise (1-2 sentences).
+            You are a helpful and fun programming tutor. 
+            Provide a short, practical coding tip for a ${this.personality} programmer. 
+            The tip should be relevant, useful, and no longer than 20 words. 
+            Example tips:
+            - "Use 'console.log()' to debug."
+            - "Follow DRY (Don't Repeat Yourself) to write cleaner code."
+            - "Use meaningful variable names for readability."
+            Coding tip:
         `;
 
         try {
@@ -21,7 +27,10 @@ class Cat {
                     "Authorization": "Bearer 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",
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ inputs: prompt })
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: { max_length: 50, temperature: 0.7 }
+                })
             });
 
             if (!response.ok) {
@@ -31,7 +40,7 @@ class Cat {
             const data = await response.json();
 
             if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
-                // Extract the first sentence to keep it short and relevant
+                // Extract only the first complete sentence to avoid rambling
                 let tip = data[0].generated_text.split(". ")[0] + ".";
                 return `${this.name} (${this.personality}) says: "${tip}"`;
             } else {
