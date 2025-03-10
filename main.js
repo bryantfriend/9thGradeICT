@@ -68,8 +68,9 @@ class Cat {
 Context:
 ${this.adventureContext}`;
 
-    // Define primary and fallback model endpoints
-    const primaryModelUrl = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B";
+    // Define primary and fallback model endpoints.
+    // Replace <your-le-chat-model> with the correct identifier for Le Chat.
+    const primaryModelUrl = "https://api-inference.huggingface.co/models/<your-le-chat-model>";
     const fallbackModelUrl = "https://api-inference.huggingface.co/models/gpt2";
     
     // Function to process the API response from a given model URL
@@ -121,15 +122,15 @@ ${this.adventureContext}`;
       }
     };
 
-    // First, try generating the adventure with GPT-Neo
+    // First, try generating the adventure with Le Chat
     try {
       const adventure = await processResponse(primaryModelUrl);
       if (adventure) return adventure;
-      else throw new Error("Invalid response from GPT-Neo.");
+      else throw new Error("Invalid response from Le Chat.");
     } catch (error) {
-      console.error("Error generating adventure with GPT-Neo:", error);
+      console.error("Error generating adventure with Le Chat:", error);
       console.warn("Falling back to GPT2 model...");
-      // Fallback to GPT2 if GPT-Neo fails
+      // Fallback to GPT2 if Le Chat fails
       try {
         const adventure = await processResponse(fallbackModelUrl);
         if (adventure) return adventure;
