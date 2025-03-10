@@ -23,7 +23,25 @@ class Cat {
     return message;
   }
 
-  // Async method to generate the next segment of the adventure
+  // Helper function to extract the first valid JSON object from a string
+  extractJSON(text) {
+    const start = text.indexOf("{");
+    if (start === -1) return null;
+    let stack = 0;
+    for (let i = start; i < text.length; i++) {
+      if (text[i] === "{") {
+        stack++;
+      } else if (text[i] === "}") {
+        stack--;
+        if (stack === 0) {
+          return text.substring(start, i + 1);
+        }
+      }
+    }
+    return null;
+  }
+
+  // Async method to generate the next segment of the adventure.
   // The AI is instructed to return a JSON string with keys "story", "option1", and "option2"
   async generateAdventure(decision = "") {
     // Append the decision (if any) to the ongoing adventure context
@@ -64,22 +82,19 @@ ${this.adventureContext}`;
       
       if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
         let generated = data[0].generated_text;
-        // Remove the prompt from the generated text, if it appears
+        // Remove the prompt text from the generated text, if it appears
         generated = generated.replace(prompt, "").trim();
-        // Attempt to parse the JSON output
         let adventure;
         try {
           adventure = JSON.parse(generated);
         } catch (e) {
-          // If parsing fails, try to extract the JSON substring
-          const jsonStart = generated.indexOf("{");
-          const jsonEnd = generated.lastIndexOf("}");
-          if (jsonStart !== -1 && jsonEnd !== -1) {
-            const jsonString = generated.substring(jsonStart, jsonEnd + 1);
+          // If direct parsing fails, try to extract a valid JSON substring
+          const jsonString = this.extractJSON(generated);
+          if (jsonString) {
             try {
               adventure = JSON.parse(jsonString);
             } catch (err) {
-              console.error("JSON parse error:", err);
+              console.error("JSON parse error after extraction:", err);
               return { story: "The adventure is lost in translation.", option1: "Restart", option2: "Quit" };
             }
           } else {
