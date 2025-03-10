@@ -6,9 +6,10 @@ class Cat {
     this.energy = energy;
   }
 
-  // Async method to generate an AI coding tip using GPT-2
+  // Async method to generate an AI coding tip using GPT-Neo
   async generateCode(userInputPrompt = "") {
-    const modelUrl = "https://api-inference.huggingface.co/models/gpt2";
+    // Updated model URL to use GPT-Neo 2.7B
+    const modelUrl = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B";
 
     // Build the prompt from a base description plus the user input (if provided)
     const basePrompt = `Pretend you are an employee at a software company specializing in website development using JavaScript and your personality is ${this.personality}. `;
