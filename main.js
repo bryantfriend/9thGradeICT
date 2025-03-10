@@ -1,21 +1,48 @@
-// Cat class to represent our coding cats
+// Cat class to represent our coding cat adventurer
 class Cat {
-  constructor(name, personality, energy) {
+  constructor(name, personality, energy, emoji) {
     this.name = name;
     this.personality = personality;
     this.energy = energy;
+    this.emoji = emoji || "😺";
+    // Initialize the adventure context with a starting narrative
+    this.adventureContext = `You are a brave cat named ${this.emoji} ${this.name} with a ${this.personality} personality and energy ${this.energy}. Your epic adventure begins now.`;
   }
 
-  // Async method to generate an AI coding tip using GPT-Neo
-  async generateCode(userInputPrompt = "") {
-    // Updated model URL to use GPT-Neo 2.7B
+  // Simulate the cat "working" (exploring) and decrease energy.
+  // When energy runs out, the cat takes a nap and recharges.
+  work() {
+    this.energy--;
+    let message = "";
+    if (this.energy <= 0) {
+      message = `${this.name} is napping and recharging energy!`;
+      this.energy = 5; // Reset energy after the nap
+    } else {
+      message = `${this.name} is exploring...`;
+    }
+    return message;
+  }
+
+  // Async method to generate the next segment of the adventure
+  // The AI is instructed to return a JSON string with keys "story", "option1", and "option2"
+  async generateAdventure(decision = "") {
+    // Append the decision (if any) to the ongoing adventure context
+    if (decision) {
+      this.adventureContext += `\nDecision: ${decision}`;
+    }
+    // Add a work step (and update energy) to the context
+    const workMessage = this.work();
+    this.adventureContext += `\n${workMessage}`;
+    
+    // Build the prompt for the AI
+    const prompt = `You are a creative storyteller. Continue the following choose-your-own-adventure story. Provide the next segment of the story along with two distinct options for what to do next. Format your response strictly as a JSON object with keys "story", "option1", and "option2". Do not include any extra text outside the JSON. 
+
+Context:
+${this.adventureContext}`;
+
+    // Use GPT-Neo 2.7B model from Hugging Face
     const modelUrl = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B";
-
-    // Build the prompt from a base description plus the user input (if provided)
-    const basePrompt = `Pretend you are an employee at a software company specializing in website development using JavaScript and your personality is ${this.personality}. `;
-    const defaultPrompt = "Give a ONE SENTENCE response with beginner JavaScript advice (like how to work with variables, edit code, interact with HTML, etc.) in character.";
-    const prompt = basePrompt + (userInputPrompt.trim() || defaultPrompt);
-
+    
     try {
       const response = await fetch(modelUrl, {
         method: "POST",
@@ -25,77 +52,99 @@ class Cat {
         },
         body: JSON.stringify({
           inputs: prompt,
-          parameters: { max_length: 50, temperature: 1.0, top_p: 0.9 }
+          parameters: { max_length: 150, temperature: 1.0, top_p: 0.9 }
         })
       });
-
+      
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
-
+      
       const data = await response.json();
-
+      
       if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
-        let tip = data[0].generated_text;
-        // Remove the prompt text from the response if it appears
-        tip = tip.replace(prompt, "").trim();
-        // Extract only the first complete sentence
-        tip = tip.split(". ")[0] + ".";
-        return `${this.name} (${this.personality}) says: "${tip}"`;
+        let generated = data[0].generated_text;
+        // Remove the prompt from the generated text, if it appears
+        generated = generated.replace(prompt, "").trim();
+        // Attempt to parse the JSON output
+        let adventure;
+        try {
+          adventure = JSON.parse(generated);
+        } catch (e) {
+          // If parsing fails, try to extract the JSON substring
+          const jsonStart = generated.indexOf("{");
+          const jsonEnd = generated.lastIndexOf("}");
+          if (jsonStart !== -1 && jsonEnd !== -1) {
+            const jsonString = generated.substring(jsonStart, jsonEnd + 1);
+            try {
+              adventure = JSON.parse(jsonString);
+            } catch (err) {
+              console.error("JSON parse error:", err);
+              return { story: "The adventure is lost in translation.", option1: "Restart", option2: "Quit" };
+            }
+          } else {
+            return { story: "The adventure is lost in translation.", option1: "Restart", option2: "Quit" };
+          }
+        }
+        // Append the new story segment to the ongoing context
+        this.adventureContext += `\n${adventure.story}`;
+        return adventure;
       } else {
-        return `${this.name} (${this.personality}) says: "Hmm, I couldn't think of a tip right now."`;
+        return { story: "The adventure fades away into silence.", option1: "Restart", option2: "Quit" };
       }
     } catch (error) {
-      console.error("Error generating AI tip:", error);
-      return `${this.name} (${this.personality}) says: "Oops, something went wrong with the AI tip."`;
+      console.error("Error generating adventure:", error);
+      return { story: "An error interrupted your adventure.", option1: "Try Again", option2: "Quit" };
     }
-  }
-
-  // Method to simulate the cat "working"
-  work() {
-    this.energy--;
-    return this.energy > 0 
-      ? `${this.name} is typing furiously with tiny paws...`
-      : `${this.name} is napping. Out of energy!`;
   }
 }
 
-// Array of cat instances
+// Array of cat instances (with different personalities, energies, and emojis)
 const cats = [
-  new Cat("Whiskers", "lazy", 3),
-  new Cat("Luna", "curious", 5),
-  new Cat("Paws", "playful", 4)
+  new Cat("Whiskers", "lazy", 5, "😺"),
+  new Cat("Luna", "curious", 5, "😸"),
+  new Cat("Paws", "playful", 5, "😻")
 ];
 
 // DOM elements
-const hireBtn = document.getElementById("hireCatBtn");
-const catMessage = document.getElementById("catMessage");
-const catTask = document.getElementById("catTask");
+const startBtn = document.getElementById("startAdventureBtn");
+const storyContainer = document.getElementById("storyContainer");
+const catEnergyEl = document.getElementById("catEnergy");
+const choiceBtn1 = document.getElementById("choice1");
+const choiceBtn2 = document.getElementById("choice2");
 
-// Event listener for hiring a cat (made async to await the AI tip)
-hireBtn.addEventListener("click", async () => {
-  const randomCat = cats[Math.floor(Math.random() * cats.length)];
-  catMessage.textContent = "";
-  let workText = randomCat.work();
-  let i = 0;
+let currentCat = null;
 
-  const typeEffect = setInterval(() => {
-    if (i < workText.length) {
-      catMessage.textContent += workText[i];
-      i++;
-    } else {
-      clearInterval(typeEffect);
-    }
-  }, 50);
+// Function to update the adventure UI by generating the next segment.
+async function updateAdventure(decision = "") {
+  if (!currentCat) return;
+  
+  // Update the displayed energy
+  catEnergyEl.textContent = `Energy: ${currentCat.energy}`;
+  
+  // Generate the next adventure segment
+  const adventure = await currentCat.generateAdventure(decision);
+  
+  // Update the story container and the option buttons with the AI-generated content
+  storyContainer.textContent = adventure.story;
+  choiceBtn1.textContent = adventure.option1;
+  choiceBtn2.textContent = adventure.option2;
+}
 
-  hireBtn.disabled = true;
+// Start the adventure when the user clicks the start button
+startBtn.addEventListener("click", async () => {
+  // Pick a random cat from the cats array
+  currentCat = cats[Math.floor(Math.random() * cats.length)];
+  // Hide the start button once the adventure begins
+  startBtn.style.display = "none";
+  // Begin the adventure with an initial story segment
+  updateAdventure();
+});
 
-  // Retrieve the user prompt if available (requires an HTML input with id "userPrompt")
-  const userPromptElement = document.getElementById("userPrompt");
-  const userPrompt = userPromptElement ? userPromptElement.value : "";
-
-  setTimeout(async () => {
-    catTask.textContent = randomCat.energy > 0 ? await randomCat.generateCode(userPrompt) : "Zzz...";
-    hireBtn.disabled = false;
-  }, workText.length * 50 + 500);
+// When the user clicks a choice, update the adventure based on that decision
+choiceBtn1.addEventListener("click", () => {
+  updateAdventure(choiceBtn1.textContent);
+});
+choiceBtn2.addEventListener("click", () => {
+  updateAdventure(choiceBtn2.textContent);
 });
