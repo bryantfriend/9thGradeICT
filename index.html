@@ -1,54 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cat-a-strophe</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cat-a-strophe</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <header>
-        <h1>Welcome to Cat-a-strophe</h1>
-        <nav>
-            <ul>
-                <li><a href="#about">About</a></li>
-                <li><a href="#programs">Programs</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section id="about">
-            <h2>About Cat-a-strophe</h2>
-            <p>Welcome to Cat-a-strophe, where cats create amazing computer programs!</p>
-        </section>
-        <section id="programs">
-            <h2>Our Programs</h2>
-            <p>Check out some of the incredible programs our feline friends have created:</p>
-            <ul>
-                <li>Purrfect Algorithms</li>
-                <li>Whisker Data Analysis</li>
-                <li>Feline Game Development</li>
-            </ul>
-            <div id="cat-code-generator">
-                <h3>Hire a Cat Coder!</h3>
-                <p>Select a cat to generate a coding tip or task:</p>
-                <button id="hireCatBtn">Hire a Cat</button>
-                <div id="catOutput">
-                    <p id="catMessage">Click the button to summon a coding cat!</p>
-                    <p id="catTask"></p>
-                </div>
-            </div>
-        </section>
-        <section id="contact">
-            <h2>Contact Us</h2>
-            <p>Have questions or want to collaborate? Reach out to us!</p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2025 Cat-a-strophe. All rights reserved.</p>
-    </footer>
+  <header>
+    <h1>Welcome to Cat-a-strophe</h1>
+    <nav>
+      <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#programs">Programs</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <section id="about">
+      <h2>About Cat-a-strophe</h2>
+      <p>Welcome to Cat-a-strophe, where cats create amazing computer programs!</p>
+    </section>
+    <section id="programs">
+      <h2>Our Programs</h2>
+      <p>Check out some of the incredible programs our feline friends have created:</p>
+      <ul>
+        <li>Purrfect Algorithms</li>
+        <li>Whisker Data Analysis</li>
+        <li>Feline Game Development</li>
+      </ul>
+      <!-- Updated Adventure Section -->
+      <div id="cat-adventure">
+        <h3>Start Your Cat Adventure!</h3>
+        <p>Embark on an epic journey with our coding cat. Each decision you make changes the story!</p>
+        <button id="startAdventureBtn">Start Adventure</button>
+        <div id="adventureOutput">
+          <p id="catEnergy">Energy: </p>
+          <div id="storyContainer">
+            <!-- Story segments will appear here -->
+          </div>
+          <div id="choices">
+            <button id="choice1"></button>
+            <button id="choice2"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="contact">
+      <h2>Contact Us</h2>
+      <p>Have questions or want to collaborate? Reach out to us!</p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 Cat-a-strophe. All rights reserved.</p>
+  </footer>
 
-    <script src="main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
