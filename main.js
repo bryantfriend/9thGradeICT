@@ -68,10 +68,12 @@ class Cat {
 Context:
 ${this.adventureContext}`;
 
-    // Use GPT-Neo 2.7B model from Hugging Face
-    const modelUrl = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B";
+    // Define primary and fallback model endpoints
+    const primaryModelUrl = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B";
+    const fallbackModelUrl = "https://api-inference.huggingface.co/models/gpt2";
     
-    try {
+    // Function to process the API response from a given model URL
+    const processResponse = async (modelUrl) => {
       const response = await fetchWithRetry(modelUrl, {
         method: "POST",
         headers: {
@@ -105,21 +107,37 @@ ${this.adventureContext}`;
               adventure = JSON.parse(jsonString);
             } catch (err) {
               console.error("JSON parse error after extraction:", err);
-              return { story: "The adventure is lost in translation.", option1: "Restart", option2: "Quit" };
+              return null;
             }
           } else {
-            return { story: "The adventure is lost in translation.", option1: "Restart", option2: "Quit" };
+            return null;
           }
         }
         // Append the new story segment to the ongoing context
         this.adventureContext += `\n${adventure.story}`;
         return adventure;
       } else {
-        return { story: "The adventure fades away into silence.", option1: "Restart", option2: "Quit" };
+        return null;
       }
+    };
+
+    // First, try generating the adventure with GPT-Neo
+    try {
+      const adventure = await processResponse(primaryModelUrl);
+      if (adventure) return adventure;
+      else throw new Error("Invalid response from GPT-Neo.");
     } catch (error) {
-      console.error("Error generating adventure:", error);
-      return { story: "An error interrupted your adventure.", option1: "Try Again", option2: "Quit" };
+      console.error("Error generating adventure with GPT-Neo:", error);
+      console.warn("Falling back to GPT2 model...");
+      // Fallback to GPT2 if GPT-Neo fails
+      try {
+        const adventure = await processResponse(fallbackModelUrl);
+        if (adventure) return adventure;
+        else throw new Error("Invalid response from GPT2 fallback.");
+      } catch (fallbackError) {
+        console.error("Error generating adventure with GPT2 fallback:", fallbackError);
+        return { story: "An error interrupted your adventure.", option1: "Try Again", option2: "Quit" };
+      }
     }
   }
 }
