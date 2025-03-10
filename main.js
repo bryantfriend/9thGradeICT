@@ -1,3 +1,13 @@
+// Helper function to perform fetch with a retry for 500 errors
+async function fetchWithRetry(url, options, retries = 1) {
+  let response = await fetch(url, options);
+  if (!response.ok && response.status === 500 && retries > 0) {
+    console.warn("Server error encountered. Retrying...");
+    return await fetchWithRetry(url, options, retries - 1);
+  }
+  return response;
+}
+
 // Cat class to represent our coding cat adventurer
 class Cat {
   constructor(name, personality, energy, emoji) {
@@ -62,7 +72,7 @@ ${this.adventureContext}`;
     const modelUrl = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B";
     
     try {
-      const response = await fetch(modelUrl, {
+      const response = await fetchWithRetry(modelUrl, {
         method: "POST",
         headers: {
           "Authorization": "Bearer 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",
@@ -70,7 +80,7 @@ ${this.adventureContext}`;
         },
         body: JSON.stringify({
           inputs: prompt,
-          parameters: { max_length: 150, temperature: 1.0, top_p: 0.9 }
+          parameters: { max_length: 100, temperature: 0.9, top_p: 0.9 }
         })
       });
       
