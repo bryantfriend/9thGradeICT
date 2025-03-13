@@ -1,12 +1,5 @@
-// Helper function to perform fetch with a retry for 500 errors
-async function fetchWithRetry(url, options, retries = 1) {
-  let response = await fetch(url, options);
-  if (!response.ok && response.status === 500 && retries > 0) {
-    console.warn("Server error encountered. Retrying...");
-    return await fetchWithRetry(url, options, retries - 1);
-  }
-  return response;
-}
+import OpenAI from "openai";
+const client = new OpenAI();
 
 // Cat class to represent our coding cat adventurer
 class Cat {
@@ -51,8 +44,7 @@ class Cat {
     return null;
   }
 
-  // Async method to generate the next segment of the adventure.
-  // The AI is instructed to return a JSON string with keys "story", "option1", and "option2"
+  // Async method to generate the next segment of the adventure using OpenAI's Chat API.
   async generateAdventure(decision = "") {
     // Append the decision (if any) to the ongoing adventure context
     if (decision) {
@@ -63,82 +55,48 @@ class Cat {
     this.adventureContext += `\n${workMessage}`;
     
     // Build the prompt for the AI
-    const prompt = `You are a creative storyteller. Continue the following choose-your-own-adventure story. Provide the next segment of the story along with two distinct options for what to do next. Format your response strictly as a JSON object with keys "story", "option1", and "option2". Do not include any extra text outside the JSON. 
+    const prompt = `You are a creative storyteller. Continue the following choose-your-own-adventure story. Provide the next segment of the story along with two distinct options for what to do next. Format your response strictly as a JSON object with keys "story", "option1", and "option2". Do not include any extra text outside the JSON.
 
 Context:
 ${this.adventureContext}`;
-
-    // Define primary and fallback model endpoints.
-    // Replace <your-le-chat-model> with the correct identifier for Le Chat.
-    const primaryModelUrl = "https://api-inference.huggingface.co/models/<your-le-chat-model>";
-    const fallbackModelUrl = "https://api-inference.huggingface.co/models/gpt2";
     
-    // Function to process the API response from a given model URL
-    const processResponse = async (modelUrl) => {
-      const response = await fetchWithRetry(modelUrl, {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer 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",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: { max_length: 100, temperature: 0.9, top_p: 0.9 }
-        })
+    // Use OpenAI's Chat Completions API
+    try {
+      const completion = await client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{
+          role: "user",
+          content: prompt,
+        }],
+        max_tokens: 150,
+        temperature: 0.9,
+        top_p: 0.9,
       });
       
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
-        let generated = data[0].generated_text;
-        // Remove the prompt text from the generated text, if it appears
-        generated = generated.replace(prompt, "").trim();
-        let adventure;
-        try {
-          adventure = JSON.parse(generated);
-        } catch (e) {
-          // If direct parsing fails, try to extract a valid JSON substring
-          const jsonString = this.extractJSON(generated);
-          if (jsonString) {
-            try {
-              adventure = JSON.parse(jsonString);
-            } catch (err) {
-              console.error("JSON parse error after extraction:", err);
-              return null;
-            }
-          } else {
+      let generated = completion.choices[0].message.content.trim();
+      let adventure;
+      try {
+        adventure = JSON.parse(generated);
+      } catch (e) {
+        // If direct parsing fails, try to extract a valid JSON substring
+        const jsonString = this.extractJSON(generated);
+        if (jsonString) {
+          try {
+            adventure = JSON.parse(jsonString);
+          } catch (err) {
+            console.error("JSON parse error after extraction:", err);
             return null;
           }
+        } else {
+          return null;
         }
-        // Append the new story segment to the ongoing context
-        this.adventureContext += `\n${adventure.story}`;
-        return adventure;
-      } else {
-        return null;
       }
-    };
-
-    // First, try generating the adventure with Le Chat
-    try {
-      const adventure = await processResponse(primaryModelUrl);
-      if (adventure) return adventure;
-      else throw new Error("Invalid response from Le Chat.");
+      // Append the new story segment to the ongoing context
+      this.adventureContext += `\n${adventure.story}`;
+      return adventure;
     } catch (error) {
-      console.error("Error generating adventure with Le Chat:", error);
-      console.warn("Falling back to GPT2 model...");
-      // Fallback to GPT2 if Le Chat fails
-      try {
-        const adventure = await processResponse(fallbackModelUrl);
-        if (adventure) return adventure;
-        else throw new Error("Invalid response from GPT2 fallback.");
-      } catch (fallbackError) {
-        console.error("Error generating adventure with GPT2 fallback:", fallbackError);
-        return { story: "An error interrupted your adventure.", option1: "Try Again", option2: "Quit" };
-      }
+      console.error("Error generating adventure with OpenAI:", error);
+      return { story: "An error interrupted your adventure.", option1: "Try Again", option2: "Quit" };
     }
   }
 }
