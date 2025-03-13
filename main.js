@@ -1,6 +1,6 @@
 // Replace with your actual API key.
 // WARNING: Exposing your API key in client-side code is insecure for production.
-const OPENAI_API_KEY = "YOUR_OPENAI_API_KEY_HERE";
+const OPENAI_API_KEY = "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";
 
 class Cat {
   constructor(name, personality, energy, emoji) {
