@@ -60,7 +60,7 @@ ${this.adventureContext}`;
           "Authorization": `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-4", // or use "gpt-3.5-turbo" if preferred
+          model: "gpt-3.5-turbo", // or use "gpt-3.5-turbo" if preferred
           messages: [{
             role: "user",
             content: prompt,
